@@ -57,10 +57,7 @@ private:
     
     Image switchTop;
     
-    Image knobDriveImage;
-    Image knobLevelImage;
-    Image knobTone1Image;
-    Image knobTone2Image;
+    Image knobImage;
     
     // This reference is provided as a quick way for your editor to
     // access the processor object that created it.

@@ -29,10 +29,7 @@ PunkDistComponent::PunkDistComponent (PunkDistAudioProcessor& p) : audioProcesso
     //
     switchTop = ImageCache::getFromMemory(BinaryData::switchTop_png, BinaryData::switchTop_pngSize);
     //
-    knobDriveImage = ImageCache::getFromMemory(BinaryData::knob_png, BinaryData::knob_pngSize);
-    knobLevelImage = ImageCache::getFromMemory(BinaryData::knob_png, BinaryData::knob_pngSize);
-    knobTone1Image = ImageCache::getFromMemory(BinaryData::knob_png, BinaryData::knob_pngSize);
-    knobTone2Image = ImageCache::getFromMemory(BinaryData::knob_png, BinaryData::knob_pngSize);
+    knobImage = ImageCache::getFromMemory(BinaryData::knob_png, BinaryData::knob_pngSize);
     
     // Size is set in the Wrapper
     // setSize (250, 450);
@@ -82,10 +79,10 @@ void PunkDistComponent::paint (Graphics& g)
     float tone2Radians = (tone2Knob.getValue() / 10.0f * 300.0f - 150.0f) * DEG2RADS;
     
     // ========== Draw parameter knobs ==================
-    g.drawImageTransformed(knobDriveImage, knobRotation(driveRadians, 36, 23));
-    g.drawImageTransformed(knobLevelImage, knobRotation(levelRadians, 145, 23));
-    g.drawImageTransformed(knobTone1Image, knobRotation(tone1Radians, 36, 130));
-    g.drawImageTransformed(knobTone2Image, knobRotation(tone2Radians, 145, 130));
+    g.drawImageTransformed(knobImage, knobRotation(driveRadians, 36, 23));
+    g.drawImageTransformed(knobImage, knobRotation(levelRadians, 145, 23));
+    g.drawImageTransformed(knobImage, knobRotation(tone1Radians, 36, 130));
+    g.drawImageTransformed(knobImage, knobRotation(tone2Radians, 145, 130));
 }
 
 void PunkDistComponent::resized()

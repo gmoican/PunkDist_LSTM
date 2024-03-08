@@ -16,6 +16,7 @@ I intend to do a demostration soon enough, when the [future improvements](#futur
     - Raw: Distorts the whole signal, as most distortion pedals do.
     - Modern: Splits the spectrum in low (under 250Hz) and high (over 250Hz) bands and only distorts the high band.
  
- ## Future improvements
+ ## TODO
+ - Migrate project to CMake.
  - I have to do a lot of testing and measures to replicate the distortion of the MiniDist, this implies that I should redo the whole drive processor.
- - The mode switch doesn't do anything by now.
+ - The mode switch doesn't do anything by now...
