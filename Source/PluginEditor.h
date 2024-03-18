@@ -16,65 +16,48 @@
 //==============================================================================
 /**
 */
-class PunkDistComponent : public Component
+class PunkDistEditor : public juce::AudioProcessorEditor
 {
 public:
-    PunkDistComponent (PunkDistAudioProcessor&);
-    ~PunkDistComponent() override;
+    PunkDistEditor (PunkDistAudioProcessor&);
+    ~PunkDistEditor() override;
 
     //==============================================================================
-    void paint (Graphics&) override;
+    void paint (juce::Graphics&) override;
     void resized() override;
     
     //=================== PARAMETER MANIPULATION ===================================
-    void setSliderComponent(Slider& slider, std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment>& sliderAttachment, String paramName, String style);
-    void setToggleComponent(ToggleButton& slider, std::unique_ptr<AudioProcessorValueTreeState::ButtonAttachment>& sliderAttachment, String paramName);
-    AffineTransform knobRotation(float radians, float posX, float posY);
+    void setSliderComponent(juce::Slider& slider, std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment>& sliderAttachment, juce::String paramName, juce::String style);
+    void setToggleComponent(juce::ToggleButton& slider, std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment>& sliderAttachment, juce::String paramName);
+    juce::AffineTransform knobRotation(float radians, float posX, float posY);
 
 private:
     // Parameters
-    Slider driveKnob;
-    std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> driveKnobAttachment;
+    juce::Slider driveKnob;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> driveKnobAttachment;
     
-    Slider levelKnob;
-    std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> levelKnobAttachment;
+    juce::Slider levelKnob;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> levelKnobAttachment;
     
-    Slider tone1Knob;
-    std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> tone1KnobAttachment;
+    juce::Slider tone1Knob;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> tone1KnobAttachment;
     
-    Slider tone2Knob;
-    std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> tone2KnobAttachment;
+    juce::Slider tone2Knob;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> tone2KnobAttachment;
     
-    Slider modeSwitch;
-    std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> modeSwitchAttachment;
-    
-    ToggleButton onToggle;
-    std::unique_ptr<AudioProcessorValueTreeState::ButtonAttachment> onToggleAttachment;
+    juce::ToggleButton onToggle;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> onToggleAttachment;
     
     // Assets - Background, knobs and switch
-    Image backgroundOn;
-    Image backgroundOff;
+    juce::Image background;
     
-    Image switchTop;
-    
-    Image knobImage;
+    juce::Image lightOff;
+        
+    juce::Image knobImage;
     
     // This reference is provided as a quick way for your editor to
     // access the processor object that created it.
     PunkDistAudioProcessor& audioProcessor;
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (PunkDistComponent)
-};
-
-// ============= ROOT WRAPPER ===========================
-class WrappedRasterAudioProcessorEditor : public AudioProcessorEditor
-{
-public:
-    WrappedRasterAudioProcessorEditor(PunkDistAudioProcessor&);
-    void resized() override;
-    
-private:
-    static constexpr int originalWidth{250};
-    static constexpr int originalHeigh{450};
-    PunkDistComponent rasterComponent;
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (PunkDistEditor)
 };

@@ -59,23 +59,22 @@ public:
     void setStateInformation (const void* data, int sizeInBytes) override;
     
     //=============== MY STUFF =====================================================
-    AudioProcessorValueTreeState state;
+    juce::AudioProcessorValueTreeState state;
 
 private:
-    AudioProcessorValueTreeState::ParameterLayout createParams();
-    using FilterBand = dsp::ProcessorDuplicator<dsp::IIR::Filter<float>, dsp::IIR::Coefficients<float>>;
-    using Gain = dsp::Gain<float>;
-    using Shaper = dsp::WaveShaper<float>;
-    using Bias = dsp::Bias<float>;
-    using OverSampling = dsp::Oversampling<float>;
-    using Limiter = dsp::Compressor<float>;
-    using Filter = dsp::LinkwitzRileyFilter<float>;
+    juce::AudioProcessorValueTreeState::ParameterLayout createParams();
+    using FilterBand = juce::dsp::ProcessorDuplicator<juce::dsp::IIR::Filter<float>, juce::dsp::IIR::Coefficients<float>>;
+    using Gain = juce::dsp::Gain<float>;
+    using Shaper = juce::dsp::WaveShaper<float>;
+    using Bias = juce::dsp::Bias<float>;
+    using OverSampling = juce::dsp::Oversampling<float>;
+    using Limiter = juce::dsp::Compressor<float>;
+    using Filter = juce::dsp::LinkwitzRileyFilter<float>;
         
     // Modifiable parameters
-    dsp::ProcessorChain<Gain, Bias, Shaper, Bias, FilterBand, Limiter> drive;
-    dsp::ProcessorChain<FilterBand, FilterBand> eq;
+    juce::dsp::ProcessorChain<Gain, Bias, Shaper, Bias, FilterBand, Limiter> drive;
+    juce::dsp::ProcessorChain<FilterBand, FilterBand> eq;
     Gain outputLevel;
-    bool mode;
     bool on;
     
     // Other things
@@ -86,7 +85,6 @@ private:
     void updateDrive();
     void updateLevel();
     void updateTone();
-    void updateMode();
     void updateState();
     
     // Drive functions

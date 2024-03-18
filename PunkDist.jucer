@@ -1,16 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <JUCERPROJECT id="FiwyyX" name="PunkDist" projectType="audioplug" useAppConfig="0"
-              addUsingNamespaceToJuceHeader="1" displaySplashScreen="1" jucerFormatVersion="1"
+              addUsingNamespaceToJuceHeader="0" displaySplashScreen="1" jucerFormatVersion="1"
               companyName="punkarra4">
   <MAINGROUP id="DSS2hk" name="PunkDist">
     <GROUP id="{DE11715E-BB8D-4F96-5330-AF7092AC93D8}" name="Assets">
-      <FILE id="zRRgjc" name="backgroundOff.png" compile="0" resource="1"
-            file="Source/Assets/backgroundOff.png"/>
-      <FILE id="fiUhsi" name="backgroundOn.png" compile="0" resource="1"
-            file="Source/Assets/backgroundOn.png"/>
+      <FILE id="Y4HxOz" name="background.png" compile="0" resource="1" file="Source/Assets/background.png"/>
       <FILE id="InSYgp" name="knob.png" compile="0" resource="1" file="Source/Assets/knob.png"/>
-      <FILE id="RX6PtJ" name="switchTop.png" compile="0" resource="1" file="Source/Assets/switchTop.png"/>
+      <FILE id="EbIfhI" name="lightOff.png" compile="0" resource="1" file="Source/Assets/lightOff.png"/>
     </GROUP>
     <GROUP id="{F5D1A4D7-7306-74A1-99A3-74BF89FF0A09}" name="Source">
       <FILE id="YqG2tN" name="PluginProcessor.cpp" compile="1" resource="0"

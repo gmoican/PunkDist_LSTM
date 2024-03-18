@@ -10,7 +10,7 @@
 #include "PluginEditor.h"
 
 //==============================================================================
-PunkDistComponent::PunkDistComponent (PunkDistAudioProcessor& p) : audioProcessor (p)
+PunkDistEditor::PunkDistEditor (PunkDistAudioProcessor& p) : AudioProcessorEditor(&p), audioProcessor (p)
 {
     // ================= PARAMETERS ====================
     setSliderComponent(driveKnob, driveKnobAttachment, "DRIVE", "Rot");
@@ -19,43 +19,34 @@ PunkDistComponent::PunkDistComponent (PunkDistAudioProcessor& p) : audioProcesso
     setSliderComponent(tone1Knob, tone1KnobAttachment, "TONE1", "Rot");
     setSliderComponent(tone2Knob, tone2KnobAttachment, "TONE2", "Rot");
     
-    setSliderComponent(modeSwitch, modeSwitchAttachment, "MODE", "Lin");
-
     setToggleComponent(onToggle, onToggleAttachment, "ONOFF");
 
     // ================= ASSETS =======================
-    backgroundOn = ImageCache::getFromMemory(BinaryData::backgroundOn_png, BinaryData::backgroundOn_pngSize);
-    backgroundOff = ImageCache::getFromMemory(BinaryData::backgroundOff_png, BinaryData::backgroundOff_pngSize);
+    background = juce::ImageCache::getFromMemory(BinaryData::background_png, BinaryData::background_pngSize);
     //
-    switchTop = ImageCache::getFromMemory(BinaryData::switchTop_png, BinaryData::switchTop_pngSize);
+    lightOff = juce::ImageCache::getFromMemory(BinaryData::lightOff_png, BinaryData::lightOff_pngSize);
     //
-    knobImage = ImageCache::getFromMemory(BinaryData::knob_png, BinaryData::knob_pngSize);
+    knobImage = juce::ImageCache::getFromMemory(BinaryData::knob_png, BinaryData::knob_pngSize);
     
-    // Size is set in the Wrapper
-    // setSize (250, 450);
+    setSize (180, 320);
 }
 
-PunkDistComponent::~PunkDistComponent()
+PunkDistEditor::~PunkDistEditor()
 {
 }
 
 //==============================================================================
-void PunkDistComponent::paint (Graphics& g)
+void PunkDistEditor::paint (juce::Graphics& g)
 {
-    // =========== On/Off state ====================
-    if (onToggle.getToggleState())
-    {
-        g.drawImageWithin(backgroundOn, 0, 0, getWidth(), getHeight(), RectanglePlacement::stretchToFit);
-    } else
-    {
-        g.drawImageWithin(backgroundOff, 0, 0, getWidth(), getHeight(), RectanglePlacement::stretchToFit);
-    }
+    g.drawImageWithin(background, 0, 0, getWidth(), getHeight(), juce::RectanglePlacement::stretchToFit);
     
-    //  =========== Switch state ====================
-    if(modeSwitch.getValue())
-        g.drawImageAt(switchTop, 24, 240);
-    else
-        g.drawImageAt(switchTop, 24, 265);
+    // =========== On/Off state ====================
+    if (!onToggle.getToggleState()) {
+        juce::AffineTransform t;
+        t = t.scaled(0.485f);
+        t = t.translated(75.5, 163.5);
+        g.drawImageTransformed(lightOff, t);
+    }
     
     // ========== Parameter knobs angle in radians ==================
     // Drive knob mapping function: y = (x-A)/(B-A) * (D-C) + C
@@ -79,76 +70,50 @@ void PunkDistComponent::paint (Graphics& g)
     float tone2Radians = (tone2Knob.getValue() / 10.0f * 300.0f - 150.0f) * DEG2RADS;
     
     // ========== Draw parameter knobs ==================
-    g.drawImageTransformed(knobImage, knobRotation(driveRadians, 36, 23));
-    g.drawImageTransformed(knobImage, knobRotation(levelRadians, 145, 23));
-    g.drawImageTransformed(knobImage, knobRotation(tone1Radians, 36, 130));
-    g.drawImageTransformed(knobImage, knobRotation(tone2Radians, 145, 130));
+    g.drawImageTransformed(knobImage, knobRotation(driveRadians, 23.5, 23));
+    g.drawImageTransformed(knobImage, knobRotation(levelRadians, 112.5, 23));
+    g.drawImageTransformed(knobImage, knobRotation(tone1Radians, 23.5, 91));
+    g.drawImageTransformed(knobImage, knobRotation(tone2Radians, 112.5, 91));
 }
 
-void PunkDistComponent::resized()
+void PunkDistEditor::resized()
 {
     // Upper row
-    driveKnob.setBounds(36, 23, 80, 80);
-    levelKnob.setBounds(145, 23, 80, 80);
+    driveKnob.setBounds(24, 23, 46, 46);
+    levelKnob.setBounds(113, 23, 46, 46);
     
     // Bottom row
-    tone1Knob.setBounds(36, 130, 80, 80);
-    tone2Knob.setBounds(145, 130, 80, 80);
-
-    // Switch
-    modeSwitch.setBounds(23, 240, 40, 40);
+    tone1Knob.setBounds(24, 91, 46, 46);
+    tone2Knob.setBounds(113, 91, 46, 46);
     
     // OnOff
-    onToggle.setBounds(112, 340, 80, 80);
+    onToggle.setBounds(65, 240, 50, 50);
 }
 
-void PunkDistComponent::setSliderComponent(Slider &slider, std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> &sliderAttachment, String paramName, String style){
-    sliderAttachment = std::make_unique<AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.state, paramName, slider);
+void PunkDistEditor::setSliderComponent(juce::Slider &slider, std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> &sliderAttachment, juce::String paramName, juce::String style){
+    sliderAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.state, paramName, slider);
     if (style == "Lin")
     {
-        slider.setSliderStyle(Slider::SliderStyle::LinearVertical);
+        slider.setSliderStyle(juce::Slider::SliderStyle::LinearVertical);
     } else
     {
-        slider.setSliderStyle(Slider::SliderStyle::RotaryHorizontalVerticalDrag);
+        slider.setSliderStyle(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag);
     }
-    slider.setTextBoxStyle(Slider::TextEntryBoxPosition::NoTextBox, true, 0, 0);
+    slider.setTextBoxStyle(juce::Slider::TextEntryBoxPosition::NoTextBox, true, 0, 0);
     addAndMakeVisible(slider);
     slider.setAlpha(0);
 }
 
-void PunkDistComponent::setToggleComponent(ToggleButton& button, std::unique_ptr<AudioProcessorValueTreeState::ButtonAttachment>& buttonAttachment, String paramName){
-    buttonAttachment = std::make_unique<AudioProcessorValueTreeState::ButtonAttachment>(audioProcessor.state, paramName, button);
+void PunkDistEditor::setToggleComponent(juce::ToggleButton& button, std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment>& buttonAttachment, juce::String paramName){
+    buttonAttachment = std::make_unique<juce::AudioProcessorValueTreeState::ButtonAttachment>(audioProcessor.state, paramName, button);
     addAndMakeVisible(button);
     button.setAlpha(0);
 }
 
-AffineTransform PunkDistComponent::knobRotation(float radians, float posX, float posY){
-    AffineTransform t;
-    t = t.rotated(radians, 34.0f, 33.5f);
+juce::AffineTransform PunkDistEditor::knobRotation(float radians, float posX, float posY){
+    juce::AffineTransform t;
+    t = t.rotated(radians, 46.0f, 46.0f);
+    t = t.scaled(0.48f);
     t = t.translated(posX, posY);
     return t;
-}
-
-// ============= ROOT WRAPPER ===========================
-WrappedRasterAudioProcessorEditor::WrappedRasterAudioProcessorEditor(PunkDistAudioProcessor& p) :
-    AudioProcessorEditor(p),
-    rasterComponent(p)
-{
-    addAndMakeVisible(&rasterComponent);
-    
-    if (auto* constrainer = getConstrainer())
-    {
-        constrainer -> setFixedAspectRatio(static_cast<double>(originalWidth) / static_cast<double>(originalHeigh));
-        constrainer -> setSizeLimits(originalWidth / 2, originalHeigh / 2, originalWidth, originalHeigh);
-    }
-    
-    setResizable(true, true);
-    setSize(originalWidth, originalHeigh);
-}
-
-void WrappedRasterAudioProcessorEditor::resized()
-{
-    const auto scaleFactor = static_cast<float>(getWidth()) / originalWidth;
-    rasterComponent.setTransform(AffineTransform::scale(scaleFactor));
-    rasterComponent.setBounds(0, 0, originalWidth, originalHeigh);
 }

@@ -91,16 +91,15 @@ void PunkDistAudioProcessor::changeProgramName (int index, const juce::String& n
 }
 
 // =========== PARAMETER LAYOUT ====================
-AudioProcessorValueTreeState::ParameterLayout PunkDistAudioProcessor::createParams()
+juce::AudioProcessorValueTreeState::ParameterLayout PunkDistAudioProcessor::createParams()
 {
-    std::vector<std::unique_ptr<RangedAudioParameter>> params;
+    std::vector<std::unique_ptr<juce::RangedAudioParameter>> params;
         
-    params.push_back(std::make_unique<AudioParameterBool>("ONOFF", "On/Off", true));
-    params.push_back(std::make_unique<AudioParameterFloat>("DRIVE", "Drive Gain", NormalisableRange<float>(0.0f, 45.0f, 0.1f), DEFAULT_DRIVE, "dB"));
-    params.push_back(std::make_unique<AudioParameterFloat>("LEVEL", "Output Level", NormalisableRange<float>(-30.0f, 30.0f, 0.1f), DEFAULT_LEVEL, "dB"));
-    params.push_back(std::make_unique<AudioParameterFloat>("TONE1", "Tone 1", NormalisableRange<float>(200.0f, 2500.0f, 0.1f), DEFAULT_TONE1, "Hz"));
-    params.push_back(std::make_unique<AudioParameterFloat>("TONE2", "Tone 2", NormalisableRange<float>(0.0f, 10.0f, 0.1f), DEFAULT_TONE2, ""));
-    params.push_back(std::make_unique<AudioParameterBool>("MODE", "Modern/Raw", false));
+    params.push_back(std::make_unique<juce::AudioParameterBool>("ONOFF", "On/Off", true));
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("DRIVE", "Drive Gain", juce::NormalisableRange<float>(0.0f, 45.0f, 0.1f), DEFAULT_DRIVE, "dB"));
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("LEVEL", "Output Level", juce::NormalisableRange<float>(-30.0f, 30.0f, 0.1f), DEFAULT_LEVEL, "dB"));
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("TONE1", "Tone 1", juce::NormalisableRange<float>(200.0f, 2500.0f, 0.1f), DEFAULT_TONE1, "Hz"));
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("TONE2", "Tone 2", juce::NormalisableRange<float>(0.0f, 10.0f, 0.1f), DEFAULT_TONE2, ""));
     
     return { params.begin(), params.end() };
 }
@@ -133,17 +132,11 @@ void PunkDistAudioProcessor::updateTone()
     auto TONE1 = state.getRawParameterValue("TONE1");
     auto TONE2 = state.getRawParameterValue("TONE2");
     float val1 = TONE1->load();
-    float val2 = Decibels::decibelsToGain(TONE2->load() * (-2.0f));
+    float val2 = juce::Decibels::decibelsToGain(TONE2->load() * (-2.0f));
     
     float sampleRate = getSampleRate();
-    *eq.get<0>().state = *dsp::IIR::Coefficients<float>::makePeakFilter(sampleRate, val1, 0.7071f, 2.5f);
-    *eq.get<1>().state = *dsp::IIR::Coefficients<float>::makePeakFilter(sampleRate, 800.0f, 0.7071f, val2);
-}
-
-void PunkDistAudioProcessor::updateMode()
-{
-    auto MODE = state.getRawParameterValue("MODE");
-    mode = MODE->load();
+    *eq.get<0>().state = *juce::dsp::IIR::Coefficients<float>::makePeakFilter(sampleRate, val1, 0.7071f, 2.5f);
+    *eq.get<1>().state = *juce::dsp::IIR::Coefficients<float>::makePeakFilter(sampleRate, 800.0f, 0.7071f, val2);
 }
 
 void PunkDistAudioProcessor::updateState()
@@ -157,7 +150,7 @@ void PunkDistAudioProcessor::updateState()
 //==============================================================================
 void PunkDistAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
-    dsp::ProcessSpec spec;
+    juce::dsp::ProcessSpec spec;
     spec.maximumBlockSize = samplesPerBlock;
     spec.numChannels = getTotalNumOutputChannels();
     spec.sampleRate = sampleRate;
@@ -168,7 +161,7 @@ void PunkDistAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlo
     drive.get<1>().setBias(0.3f);
     drive.get<2>().functionToUse = arcTanClipping;
     drive.get<3>().setBias(-0.3f);
-    *drive.get<4>().state = *dsp::IIR::Coefficients<float>::makeHighPass(sampleRate, 30.0f, 0.7071f);
+    *drive.get<4>().state = *juce::dsp::IIR::Coefficients<float>::makeHighPass(sampleRate, 30.0f, 0.7071f);
     drive.get<5>().setRatio(30.0f);
     drive.get<5>().setAttack(1.0f);
     drive.get<5>().setThreshold(-6.0f);
@@ -231,10 +224,10 @@ void PunkDistAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juc
     updateState();
     if(on)
     {
-        dsp::AudioBlock<float> audioBlock (buffer);
+        juce::dsp::AudioBlock<float> audioBlock (buffer);
 
         // Drive the entire signal
-        dsp::ProcessContextReplacing<float> driveCtx(audioBlock);
+        juce::dsp::ProcessContextReplacing<float> driveCtx(audioBlock);
         auto& inputBlock = driveCtx.getInputBlock();
         driveOV.processSamplesUp(inputBlock);
         drive.process(driveCtx);
@@ -242,10 +235,10 @@ void PunkDistAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juc
         driveOV.processSamplesDown(outputBlock);
                 
         // Tone controls
-        eq.process(dsp::ProcessContextReplacing<float>(audioBlock));
+        eq.process(juce::dsp::ProcessContextReplacing<float>(audioBlock));
         
         // Output level
-        outputLevel.process(dsp::ProcessContextReplacing<float>(audioBlock));
+        outputLevel.process(juce::dsp::ProcessContextReplacing<float>(audioBlock));
     }
 }
 
@@ -257,7 +250,7 @@ bool PunkDistAudioProcessor::hasEditor() const
 
 juce::AudioProcessorEditor* PunkDistAudioProcessor::createEditor()
 {
-    return new WrappedRasterAudioProcessorEditor (*this);
+    return new PunkDistEditor (*this);
 }
 
 //==============================================================================
@@ -291,7 +284,7 @@ float PunkDistAudioProcessor::asymptoticClipping(float sample)
 // Best distorsion IMO
 float PunkDistAudioProcessor::arcTanClipping(float sample)
 {
-    return 2.f / MathConstants<float>::pi * std::atan(sample);
+    return 2.f / juce::MathConstants<float>::pi * std::atan(sample);
 }
 
 /*
@@ -305,7 +298,7 @@ float PunkDistAudioProcessor::newTanClipping(float sample)
 // Aggressive
 float PunkDistAudioProcessor::tanhClipping(float sample)
 {
-    return 2.f / MathConstants<float>::pi * dsp::FastMathApproximations::tanh(MathConstants<float>::twoPi * sample);
+    return 2.f / juce::MathConstants<float>::pi * juce::dsp::FastMathApproximations::tanh(juce::MathConstants<float>::twoPi * sample);
 }
 
 // Fuzz
