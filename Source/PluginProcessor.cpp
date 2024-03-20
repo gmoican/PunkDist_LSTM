@@ -98,7 +98,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout PunkDistAudioProcessor::crea
     params.push_back(std::make_unique<juce::AudioParameterBool>("ONOFF", "On/Off", true));
     params.push_back(std::make_unique<juce::AudioParameterFloat>("DRIVE", "Drive Gain", juce::NormalisableRange<float>(0.0f, 45.0f, 0.1f), DEFAULT_DRIVE, "dB"));
     params.push_back(std::make_unique<juce::AudioParameterFloat>("LEVEL", "Output Level", juce::NormalisableRange<float>(-30.0f, 30.0f, 0.1f), DEFAULT_LEVEL, "dB"));
-    params.push_back(std::make_unique<juce::AudioParameterFloat>("TONE1", "Tone 1", juce::NormalisableRange<float>(200.0f, 2500.0f, 0.1f), DEFAULT_TONE1, "Hz"));
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("TONE1", "Tone 1", juce::NormalisableRange<float>(0.0f, 10.0f, 0.1f), DEFAULT_TONE1, ""));
     params.push_back(std::make_unique<juce::AudioParameterFloat>("TONE2", "Tone 2", juce::NormalisableRange<float>(0.0f, 10.0f, 0.1f), DEFAULT_TONE2, ""));
     
     return { params.begin(), params.end() };
@@ -131,19 +131,22 @@ void PunkDistAudioProcessor::updateTone()
 {
     auto TONE1 = state.getRawParameterValue("TONE1");
     auto TONE2 = state.getRawParameterValue("TONE2");
-    float val1 = TONE1->load();
-    float val2 = juce::Decibels::decibelsToGain(TONE2->load() * (-2.0f));
+    float tone1freq = juce::jmap(TONE1->load(), 0.f, 10.f, 200.f, 2500.f);
+    float tone1gain = juce::jmap(TONE1->load(), 0.f, 10.f, 1.f, 2.5f);
+    float tone2dip = juce::Decibels::decibelsToGain(TONE2->load() * (-1.0f));
+    float tone2bump = juce::jmap(TONE2->load(), 0.f, 10.f, 1.f, 1.5f);
     
     float sampleRate = getSampleRate();
-    *eq.get<0>().state = *juce::dsp::IIR::Coefficients<float>::makePeakFilter(sampleRate, val1, 0.7071f, 2.5f);
-    *eq.get<1>().state = *juce::dsp::IIR::Coefficients<float>::makePeakFilter(sampleRate, 800.0f, 0.7071f, val2);
+    *eq.get<1>().state = *juce::dsp::IIR::Coefficients<float>::makePeakFilter(sampleRate, tone1freq, 0.7071f, tone1gain);
+    *eq.get<2>().state = *juce::dsp::IIR::Coefficients<float>::makePeakFilter(sampleRate, 800.0f, 1.5f, tone2dip);
+    *eq.get<3>().state = *juce::dsp::IIR::Coefficients<float>::makePeakFilter(sampleRate, 80.0f, 0.7071f, tone2bump);
 }
 
 void PunkDistAudioProcessor::updateState()
 {
     updateOnOff();
-    updateDrive();
     updateTone();
+    updateDrive();
     updateLevel();
 }
 
@@ -155,6 +158,7 @@ void PunkDistAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlo
     spec.numChannels = getTotalNumOutputChannels();
     spec.sampleRate = sampleRate;
     
+    // FIXME: Fine tune to better emulate the behaviour of the MiniDist
     drive.prepare(spec);
     drive.reset();
     drive.get<0>().setRampDurationSeconds(0.05);
@@ -169,6 +173,8 @@ void PunkDistAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlo
 
     eq.prepare(spec);
     eq.reset();
+    *eq.get<0>().state = *juce::dsp::IIR::Coefficients<float>::makeHighPass(sampleRate, 20.f, 0.7071f);
+    *eq.get<4>().state = *juce::dsp::IIR::Coefficients<float>::makeLowPass(sampleRate, 8000.f, 0.3536f);
     
     outputLevel.prepare(spec);
     outputLevel.setRampDurationSeconds(0.05);
@@ -225,6 +231,9 @@ void PunkDistAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juc
     if(on)
     {
         juce::dsp::AudioBlock<float> audioBlock (buffer);
+        
+        // Tone controls
+        eq.process(juce::dsp::ProcessContextReplacing<float>(audioBlock));
 
         // Drive the entire signal
         juce::dsp::ProcessContextReplacing<float> driveCtx(audioBlock);
@@ -233,9 +242,6 @@ void PunkDistAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juc
         drive.process(driveCtx);
         auto& outputBlock = driveCtx.getOutputBlock();
         driveOV.processSamplesDown(outputBlock);
-                
-        // Tone controls
-        eq.process(juce::dsp::ProcessContextReplacing<float>(audioBlock));
         
         // Output level
         outputLevel.process(juce::dsp::ProcessContextReplacing<float>(audioBlock));

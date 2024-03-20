@@ -60,9 +60,9 @@ void PunkDistEditor::paint (juce::Graphics& g)
     float levelRadians = ((levelKnob.getValue() + 30.0f) / (60.0f) * 300.0f - 150.0f) * DEG2RADS;
     
     // Tone1 knob mapping function: y = (x-A)/(B-A) * (D-C) + C
-    // x = {A, B} = {200.0, 2500.0}
+    // x = {A, B} = {0.0, 10.0}
     // y = {C, D} = {-150, 150} * PI / 180
-    float tone1Radians = ((tone1Knob.getValue() - 200) / 2300.0f * 300.0f - 150.0f) * DEG2RADS;
+    float tone1Radians = (tone1Knob.getValue() / 10.0f * 300.0f - 150.0f) * DEG2RADS;
     
     // Tone2 knob mapping function: y = (x-A)/(B-A) * (D-C) + C
     // x = {A, B} = {0.0, 10.0}

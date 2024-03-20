@@ -12,7 +12,7 @@
 
 #define DEFAULT_DRIVE 15.0f
 #define DEFAULT_LEVEL 0.0f
-#define DEFAULT_TONE1 1350.0f
+#define DEFAULT_TONE1 5.0f
 #define DEFAULT_TONE2 5.0f
 
 //==============================================================================
@@ -73,7 +73,7 @@ private:
         
     // Modifiable parameters
     juce::dsp::ProcessorChain<Gain, Bias, Shaper, Bias, FilterBand, Limiter> drive;
-    juce::dsp::ProcessorChain<FilterBand, FilterBand> eq;
+    juce::dsp::ProcessorChain<FilterBand, FilterBand, FilterBand, FilterBand, FilterBand> eq;
     Gain outputLevel;
     bool on;
     
