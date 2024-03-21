@@ -50,9 +50,9 @@ void PunkDistEditor::paint (juce::Graphics& g)
     
     // ========== Parameter knobs angle in radians ==================
     // Drive knob mapping function: y = (x-A)/(B-A) * (D-C) + C
-    // x = {A, B} = {0.0, 45.0}
+    // x = {A, B} = {0.0, 30.0}
     // y = {C, D} = {-150, 150} * PI / 180
-    float driveRadians = (driveKnob.getValue() / 45.0f * 300.0f - 150.0f) * DEG2RADS;
+    float driveRadians = (driveKnob.getValue() / 30.0f * 300.0f - 150.0f) * DEG2RADS;
     
     // Output knob mapping function: y = (x-A)/(B-A) * (D-C) + C
     // x = {A, B} = {-30.0, 30.0}

@@ -96,7 +96,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout PunkDistAudioProcessor::crea
     std::vector<std::unique_ptr<juce::RangedAudioParameter>> params;
         
     params.push_back(std::make_unique<juce::AudioParameterBool>("ONOFF", "On/Off", true));
-    params.push_back(std::make_unique<juce::AudioParameterFloat>("DRIVE", "Drive Gain", juce::NormalisableRange<float>(0.0f, 45.0f, 0.1f), DEFAULT_DRIVE, "dB"));
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("DRIVE", "Drive Gain", juce::NormalisableRange<float>(0.0f, 30.0f, 0.1f), DEFAULT_DRIVE, "dB"));
     params.push_back(std::make_unique<juce::AudioParameterFloat>("LEVEL", "Output Level", juce::NormalisableRange<float>(-30.0f, 30.0f, 0.1f), DEFAULT_LEVEL, "dB"));
     params.push_back(std::make_unique<juce::AudioParameterFloat>("TONE1", "Tone 1", juce::NormalisableRange<float>(0.0f, 10.0f, 0.1f), DEFAULT_TONE1, ""));
     params.push_back(std::make_unique<juce::AudioParameterFloat>("TONE2", "Tone 2", juce::NormalisableRange<float>(0.0f, 10.0f, 0.1f), DEFAULT_TONE2, ""));
@@ -113,11 +113,10 @@ void PunkDistAudioProcessor::updateOnOff()
 
 void PunkDistAudioProcessor::updateDrive()
 {
-    // float sampleRate = getSampleRate();
     auto IN = state.getRawParameterValue("DRIVE");
     float inputValue = IN->load();
     
-    drive.get<0>().setGainDecibels(inputValue);
+    inputGain.setGainDecibels(inputValue);
  }
 
 void PunkDistAudioProcessor::updateLevel()
@@ -159,17 +158,17 @@ void PunkDistAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlo
     spec.sampleRate = sampleRate;
     
     // FIXME: Fine tune to better emulate the behaviour of the MiniDist
+    inputGain.prepare(spec);
+    inputGain.setRampDurationSeconds(0.05);
+
     drive.prepare(spec);
     drive.reset();
-    drive.get<0>().setRampDurationSeconds(0.05);
-    drive.get<1>().setBias(0.3f);
-    drive.get<2>().functionToUse = arcTanClipping;
-    drive.get<3>().setBias(-0.3f);
-    *drive.get<4>().state = *juce::dsp::IIR::Coefficients<float>::makeHighPass(sampleRate, 30.0f, 0.7071f);
-    drive.get<5>().setRatio(30.0f);
-    drive.get<5>().setAttack(1.0f);
-    drive.get<5>().setThreshold(-6.0f);
-    drive.get<5>().setRelease(60.0f);
+    drive.get<0>().functionToUse = arcTanClipping;
+    *drive.get<1>().state = *juce::dsp::IIR::Coefficients<float>::makeHighPass(sampleRate, 40.0f, 0.7071f);
+    drive.get<2>().setRatio(8.0f);
+    drive.get<2>().setAttack(1.0f);
+    drive.get<2>().setThreshold(-3.0f);
+    drive.get<2>().setRelease(15.0f);
 
     eq.prepare(spec);
     eq.reset();
@@ -234,8 +233,10 @@ void PunkDistAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juc
         
         // Tone controls
         eq.process(juce::dsp::ProcessContextReplacing<float>(audioBlock));
+        
+        inputGain.process(juce::dsp::ProcessContextReplacing<float>(audioBlock));
 
-        // Drive the entire signal
+        // Drive
         juce::dsp::ProcessContextReplacing<float> driveCtx(audioBlock);
         auto& inputBlock = driveCtx.getInputBlock();
         driveOV.processSamplesUp(inputBlock);
@@ -280,47 +281,8 @@ juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
     return new PunkDistAudioProcessor();
 }
 
-// ========== DRIVE MATH FUNCTIONS =============================================
-// Hard clipper
-float PunkDistAudioProcessor::asymptoticClipping(float sample)
-{
-    return sample / (abs(sample) + 1);
-}
-
-// Best distorsion IMO
+// ========== Waveshaper function =============================================
 float PunkDistAudioProcessor::arcTanClipping(float sample)
 {
     return 2.f / juce::MathConstants<float>::pi * std::atan(sample);
-}
-
-/*
-// ISSUE: Not tested, looks nice on graphs
-float PunkDistAudioProcessor::newTanClipping(float sample)
-{
-    return std::atan(sample) / std::atan(drive.get<0>().getGainLinear());
-}
- */
-
-// Aggressive
-float PunkDistAudioProcessor::tanhClipping(float sample)
-{
-    return 2.f / juce::MathConstants<float>::pi * juce::dsp::FastMathApproximations::tanh(juce::MathConstants<float>::twoPi * sample);
-}
-
-// Fuzz
-float PunkDistAudioProcessor::asymetricClipping(float sample)
-{
-    if (sample < -0.08905f) {
-        return (-3 / 4) * (1 - (std::pow((1 - (std::abs(sample) - 0.032857f)), 12)) + (1 / 3) * (std::abs(sample) - 0.032847f)) + 0.01f;
-    } else if (sample >= -0.08905f && sample < 0.320018f) {
-        return (-6.153f * std::pow(sample, 2)) + 3.9375f * sample;
-    } else {
-        return 0.630035f;
-    }
-}
-
-// Sounds like shit...
-float PunkDistAudioProcessor::softClipping(float sample)
-{
-    return (3 * sample) / 2 * (1 - (std::pow(sample, 2) / 3));
 }

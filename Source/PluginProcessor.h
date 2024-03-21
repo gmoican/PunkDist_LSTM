@@ -66,13 +66,13 @@ private:
     using FilterBand = juce::dsp::ProcessorDuplicator<juce::dsp::IIR::Filter<float>, juce::dsp::IIR::Coefficients<float>>;
     using Gain = juce::dsp::Gain<float>;
     using Shaper = juce::dsp::WaveShaper<float>;
-    using Bias = juce::dsp::Bias<float>;
     using OverSampling = juce::dsp::Oversampling<float>;
     using Limiter = juce::dsp::Compressor<float>;
     using Filter = juce::dsp::LinkwitzRileyFilter<float>;
         
     // Modifiable parameters
-    juce::dsp::ProcessorChain<Gain, Bias, Shaper, Bias, FilterBand, Limiter> drive;
+    Gain inputGain;
+    juce::dsp::ProcessorChain<Shaper, FilterBand, Limiter> drive;
     juce::dsp::ProcessorChain<FilterBand, FilterBand, FilterBand, FilterBand, FilterBand> eq;
     Gain outputLevel;
     bool on;
@@ -88,12 +88,7 @@ private:
     void updateState();
     
     // Drive functions
-    static float asymptoticClipping(float sample);
     static float arcTanClipping(float sample);
-    // static float newTanClipping(float sample);
-    static float tanhClipping(float sample);
-    static float asymetricClipping(float sample);
-    static float softClipping(float sample);
         
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (PunkDistAudioProcessor)
