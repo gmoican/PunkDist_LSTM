@@ -1,4 +1,5 @@
 # PunkDist - A distortion pedal plugin
+[![PunkDist multiplatform build](https://github.com/gmoican/PunkDist/actions/workflows/main.yml/badge.svg)](https://github.com/gmoican/PunkDist/actions/workflows/main.yml)
 
 ![DemoImage](docs/images/demo.jpg)
 
