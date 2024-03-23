@@ -269,8 +269,7 @@ void PunkDistAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
 
 void PunkDistAudioProcessor::setStateInformation (const void* data, int sizeInBytes)
 {
-    // You should use this method to restore your parameters from this memory block,
-    // whose contents will have been created by the getStateInformation() call.
+    // Preset loader
 
     juce::ignoreUnused(data, sizeInBytes);
 }
