@@ -12,6 +12,8 @@
 //==============================================================================
 PunkDistEditor::PunkDistEditor (PunkDistAudioProcessor& p) : AudioProcessorEditor(&p), audioProcessor (p)
 {
+    juce::ignoreUnused(audioProcessor);
+
     // ================= PARAMETERS ====================
     setSliderComponent(driveKnob, driveKnobAttachment, "DRIVE", "Rot");
     setSliderComponent(levelKnob, levelKnobAttachment, "LEVEL", "Rot");

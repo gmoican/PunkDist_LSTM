@@ -1,15 +1,7 @@
-/*
-  ==============================================================================
-
-    This file contains the basic framework code for a JUCE plugin editor.
-
-  ==============================================================================
-*/
-
 #pragma once
 
-#include <JuceHeader.h>
 #include "PluginProcessor.h"
+#include "BinaryData.h"
 
 #define DEG2RADS 0.0174533f
 

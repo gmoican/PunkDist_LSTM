@@ -1,14 +1,11 @@
-/*
-  ==============================================================================
-
-    This file contains the basic framework code for a JUCE plugin processor.
-
-  ==============================================================================
-*/
-
 #pragma once
 
-#include <JuceHeader.h>
+#include <juce_audio_processors/juce_audio_processors.h>
+#include <juce_dsp/juce_dsp.h>
+
+#if (MSVC)
+#include "ipps.h"
+#endif
 
 #define DEFAULT_DRIVE 15.0f
 #define DEFAULT_LEVEL 0.0f
