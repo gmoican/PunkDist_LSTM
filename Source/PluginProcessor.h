@@ -65,8 +65,7 @@ private:
     using Shaper = juce::dsp::WaveShaper<float>;
     using OverSampling = juce::dsp::Oversampling<float>;
     using Limiter = juce::dsp::Compressor<float>;
-    using Filter = juce::dsp::LinkwitzRileyFilter<float>;
-        
+    
     // Modifiable parameters
     Gain inputGain;
     juce::dsp::ProcessorChain<Shaper, FilterBand, Limiter> drive;
