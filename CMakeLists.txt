@@ -83,7 +83,7 @@ endif ()
 add_subdirectory(JUCE)
 
 # Add any other modules you want modules here, before the juce_add_plugin call
-# juce_add_module(modules/my_module)
+add_subdirectory(modules/RTNeural)
 
 # See `docs/CMake API.md` in the JUCE repo for all config options
 juce_add_plugin("${PROJECT_NAME}"
@@ -209,6 +209,7 @@ target_compile_definitions(SharedCode
 target_link_libraries(SharedCode
     INTERFACE
     Assets
+    RTNeural
     juce_audio_utils
     juce_audio_processors
     juce_dsp
@@ -224,17 +225,17 @@ target_link_libraries("${PROJECT_NAME}" PRIVATE SharedCode)
 # # #
 
 ### IPP support, comment out to disable
-# # When present, use Intel IPP for performance on Windows
-# if (WIN32) # Can't use MSVC here, as it won't catch Clang on Windows
-#     find_package(IPP)
-#     if (IPP_FOUND)
-#         target_link_libraries(SharedCode INTERFACE IPP::ipps IPP::ippcore IPP::ippi IPP::ippcv)
-#         message("IPP LIBRARIES FOUND")
-#         target_compile_definitions(SharedCode INTERFACE PAMPLEJUCE_IPP=1)
-#     else ()
-#         message("IPP LIBRARIES *NOT* FOUND")
-#     endif ()
-# endif ()
+#      # When present, use Intel IPP for performance on Windows
+#      if (WIN32) # Can't use MSVC here, as it won't catch Clang on Windows
+#          find_package(IPP)
+#          if (IPP_FOUND)
+#              target_link_libraries(SharedCode INTERFACE IPP::ipps IPP::ippcore IPP::ippi IPP::ippcv)
+#              message("IPP LIBRARIES FOUND")
+#              target_compile_definitions(SharedCode INTERFACE PAMPLEJUCE_IPP=1)
+#          else ()
+#              message("IPP LIBRARIES *NOT* FOUND")
+#          endif ()
+#      endif ()
 
 # # #
 

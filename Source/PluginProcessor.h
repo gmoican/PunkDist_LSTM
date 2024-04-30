@@ -2,6 +2,7 @@
 
 #include <juce_audio_processors/juce_audio_processors.h>
 #include <juce_dsp/juce_dsp.h>
+#include "RTNeuralLSTM.h"
 
 #if (MSVC)
 #include "ipps.h"
@@ -62,19 +63,15 @@ private:
     juce::AudioProcessorValueTreeState::ParameterLayout createParams();
     using FilterBand = juce::dsp::ProcessorDuplicator<juce::dsp::IIR::Filter<float>, juce::dsp::IIR::Coefficients<float>>;
     using Gain = juce::dsp::Gain<float>;
-    using Shaper = juce::dsp::WaveShaper<float>;
-    using OverSampling = juce::dsp::Oversampling<float>;
-    using Limiter = juce::dsp::Compressor<float>;
+    
+    // ML model
+    RT_LSTM LSTM;
     
     // Modifiable parameters
     Gain inputGain;
-    juce::dsp::ProcessorChain<Shaper, FilterBand, Limiter> drive;
     juce::dsp::ProcessorChain<FilterBand, FilterBand, FilterBand, FilterBand, FilterBand> eq;
     Gain outputLevel;
     bool on;
-    
-    // Other things
-    OverSampling driveOV { 2, 2, OverSampling::filterHalfBandPolyphaseIIR, true, false };
 
     // Updaters
     void updateOnOff();
@@ -83,9 +80,6 @@ private:
     void updateTone();
     void updateState();
     
-    // Drive functions
-    static float arcTanClipping(float sample);
-        
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (PunkDistAudioProcessor)
 };

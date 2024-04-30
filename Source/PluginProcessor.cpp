@@ -89,12 +89,12 @@ void PunkDistAudioProcessor::changeProgramName (int index, const juce::String& n
 juce::AudioProcessorValueTreeState::ParameterLayout PunkDistAudioProcessor::createParams()
 {
     std::vector<std::unique_ptr<juce::RangedAudioParameter>> params;
-        
-    params.push_back(std::make_unique<juce::AudioParameterBool>("ONOFF", "On/Off", true));
-    params.push_back(std::make_unique<juce::AudioParameterFloat>("DRIVE", "Drive Gain", juce::NormalisableRange<float>(0.0f, 30.0f, 0.1f), DEFAULT_DRIVE, "dB"));
-    params.push_back(std::make_unique<juce::AudioParameterFloat>("LEVEL", "Output Level", juce::NormalisableRange<float>(-30.0f, 30.0f, 0.1f), DEFAULT_LEVEL, "dB"));
-    params.push_back(std::make_unique<juce::AudioParameterFloat>("TONE1", "Tone 1", juce::NormalisableRange<float>(0.0f, 10.0f, 0.1f), DEFAULT_TONE1, ""));
-    params.push_back(std::make_unique<juce::AudioParameterFloat>("TONE2", "Tone 2", juce::NormalisableRange<float>(0.0f, 10.0f, 0.1f), DEFAULT_TONE2, ""));
+    
+    params.push_back(std::make_unique<juce::AudioParameterBool>(juce::ParameterID("ONOFF", 0), "On/Off", true));
+    params.push_back(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID("DRIVE", 0), "Drive Gain", juce::NormalisableRange<float>(0.0f, 30.0f, 0.1f), DEFAULT_DRIVE, "dB"));
+    params.push_back(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID("LEVEL", 0), "Output Level", juce::NormalisableRange<float>(-30.0f, 30.0f, 0.1f), DEFAULT_LEVEL, "dB"));
+    params.push_back(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID("TONE1", 0), "Tone 1", juce::NormalisableRange<float>(0.0f, 10.0f, 0.1f), DEFAULT_TONE1, ""));
+    params.push_back(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID("TONE2", 0), "Tone 2", juce::NormalisableRange<float>(0.0f, 10.0f, 0.1f), DEFAULT_TONE2, ""));
     
     return { params.begin(), params.end() };
 }
@@ -152,19 +152,15 @@ void PunkDistAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlo
     spec.numChannels = getTotalNumOutputChannels();
     spec.sampleRate = sampleRate;
     
-    // FIXME: Fine tune to better emulate the behaviour of the MiniDist
     inputGain.prepare(spec);
     inputGain.setRampDurationSeconds(0.05);
-
-    drive.prepare(spec);
-    drive.reset();
-    drive.get<0>().functionToUse = arcTanClipping;
-    *drive.get<1>().state = *juce::dsp::IIR::Coefficients<float>::makeHighPass(sampleRate, 40.0f, 0.7071f);
-    drive.get<2>().setRatio(8.0f);
-    drive.get<2>().setAttack(1.0f);
-    drive.get<2>().setThreshold(-3.0f);
-    drive.get<2>().setRelease(15.0f);
-
+    
+    // Read json model
+    juce::MemoryInputStream jsonInputStream(BinaryData::ml_minidist_model_json, BinaryData::ml_minidist_model_jsonSize, false);
+    nlohmann::json weights_json = nlohmann::json::parse(jsonInputStream.readEntireStreamAsString().toStdString());
+    LSTM.reset();
+    LSTM.load_json(weights_json);
+    
     eq.prepare(spec);
     eq.reset();
     *eq.get<0>().state = *juce::dsp::IIR::Coefficients<float>::makeHighPass(sampleRate, 20.f, 0.7071f);
@@ -211,17 +207,6 @@ void PunkDistAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juc
     juce::ignoreUnused(midiMessages);
 
     juce::ScopedNoDenormals noDenormals;
-    auto totalNumInputChannels  = getTotalNumInputChannels();
-    auto totalNumOutputChannels = getTotalNumOutputChannels();
-
-    // In case we have more outputs than inputs, this code clears any output
-    // channels that didn't contain input data, (because these aren't
-    // guaranteed to be empty - they may contain garbage).
-    // This is here to avoid people getting screaming feedback
-    // when they first compile a plugin, but obviously you don't need to keep
-    // this code if your algorithm always overwrites all the output channels.
-    for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
-        buffer.clear (i, 0, buffer.getNumSamples());
     
     updateState();
     if(on)
@@ -231,15 +216,14 @@ void PunkDistAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juc
         // Tone controls
         eq.process(juce::dsp::ProcessContextReplacing<float>(audioBlock));
         
+        // Input level
         inputGain.process(juce::dsp::ProcessContextReplacing<float>(audioBlock));
-
-        // Drive
-        juce::dsp::ProcessContextReplacing<float> driveCtx(audioBlock);
-        auto& inputBlock = driveCtx.getInputBlock();
-        driveOV.processSamplesUp(inputBlock);
-        drive.process(driveCtx);
-        auto& outputBlock = driveCtx.getOutputBlock();
-        driveOV.processSamplesDown(outputBlock);
+        
+        // Model inference
+        for (int ch = 0; ch < buffer.getNumChannels(); ++ch) {
+            // LSTM.process(audioBlock.getChannelPointer(ch), audioBlock.getChannelPointer(ch), (int) audioBlock.getNumSamples());
+            LSTM.process(buffer.getReadPointer(ch), buffer.getWritePointer(ch), buffer.getNumSamples());
+        }
         
         // Output level
         outputLevel.process(juce::dsp::ProcessContextReplacing<float>(audioBlock));
@@ -279,10 +263,4 @@ void PunkDistAudioProcessor::setStateInformation (const void* data, int sizeInBy
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 {
     return new PunkDistAudioProcessor();
-}
-
-// ========== Waveshaper function =============================================
-float PunkDistAudioProcessor::arcTanClipping(float sample)
-{
-    return 2.f / juce::MathConstants<float>::pi * std::atan(sample);
 }
