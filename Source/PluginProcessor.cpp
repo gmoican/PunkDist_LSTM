@@ -91,7 +91,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout PunkDistAudioProcessor::crea
     std::vector<std::unique_ptr<juce::RangedAudioParameter>> params;
     
     params.push_back(std::make_unique<juce::AudioParameterBool>(juce::ParameterID("ONOFF", 0), "On/Off", true));
-    params.push_back(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID("DRIVE", 0), "Drive Gain", juce::NormalisableRange<float>(0.0f, 30.0f, 0.1f), DEFAULT_DRIVE, "dB"));
+    params.push_back(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID("DRIVE", 0), "Drive Gain", juce::NormalisableRange<float>(0.0f, 60.0f, 0.1f), DEFAULT_DRIVE, "dB"));
     params.push_back(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID("LEVEL", 0), "Output Level", juce::NormalisableRange<float>(-30.0f, 30.0f, 0.1f), DEFAULT_LEVEL, "dB"));
     params.push_back(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID("TONE1", 0), "Tone 1", juce::NormalisableRange<float>(0.0f, 10.0f, 0.1f), DEFAULT_TONE1, ""));
     params.push_back(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID("TONE2", 0), "Tone 2", juce::NormalisableRange<float>(0.0f, 10.0f, 0.1f), DEFAULT_TONE2, ""));
@@ -112,6 +112,7 @@ void PunkDistAudioProcessor::updateDrive()
     float inputValue = IN->load();
     
     inputGain.setGainDecibels(inputValue);
+    driveCompensationGain.setGainDecibels(-inputValue);
  }
 
 void PunkDistAudioProcessor::updateLevel()
@@ -154,6 +155,9 @@ void PunkDistAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlo
     
     inputGain.prepare(spec);
     inputGain.setRampDurationSeconds(0.05);
+    
+    driveCompensationGain.prepare(spec);
+    driveCompensationGain.setRampDurationSeconds(0.05);
     
     // Read json model
     juce::MemoryInputStream jsonInputStream(BinaryData::ml_minidist_model_json, BinaryData::ml_minidist_model_jsonSize, false);
@@ -213,17 +217,18 @@ void PunkDistAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juc
     {
         juce::dsp::AudioBlock<float> audioBlock (buffer);
         
-        // Tone controls
-        eq.process(juce::dsp::ProcessContextReplacing<float>(audioBlock));
-        
         // Input level
         inputGain.process(juce::dsp::ProcessContextReplacing<float>(audioBlock));
         
         // Model inference
         for (int ch = 0; ch < buffer.getNumChannels(); ++ch) {
-            // LSTM.process(audioBlock.getChannelPointer(ch), audioBlock.getChannelPointer(ch), (int) audioBlock.getNumSamples());
             LSTM.process(buffer.getReadPointer(ch), buffer.getWritePointer(ch), buffer.getNumSamples());
         }
+        
+        driveCompensationGain.process(juce::dsp::ProcessContextReplacing<float>(audioBlock));
+
+        // Tone controls
+        eq.process(juce::dsp::ProcessContextReplacing<float>(audioBlock));
         
         // Output level
         outputLevel.process(juce::dsp::ProcessContextReplacing<float>(audioBlock));

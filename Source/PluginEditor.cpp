@@ -43,7 +43,7 @@ void PunkDistEditor::paint (juce::Graphics& g)
     }
     
     // ========== Parameter knobs angle in radians ==================
-    float driveRadians = juce::jmap(driveKnob.getValue(), 0.0, 30.0, -150.0, 150.0) * DEG2RADS;
+    float driveRadians = juce::jmap(driveKnob.getValue(), 0.0, 60.0, -150.0, 150.0) * DEG2RADS;
     float levelRadians = juce::jmap(levelKnob.getValue(), -30.0, 30.0, -150.0, 150.0) * DEG2RADS;
     float tone1Radians = juce::jmap(tone1Knob.getValue(), 0.0, 10.0, -150.0, 150.0) * DEG2RADS;
     float tone2Radians = juce::jmap(tone2Knob.getValue(), 0.0, 10.0, -150.0, 150.0) * DEG2RADS;

@@ -8,7 +8,7 @@
 #include "ipps.h"
 #endif
 
-#define DEFAULT_DRIVE 15.0f
+#define DEFAULT_DRIVE 30.f
 #define DEFAULT_LEVEL 0.0f
 #define DEFAULT_TONE1 5.0f
 #define DEFAULT_TONE2 5.0f
@@ -68,7 +68,7 @@ private:
     RT_LSTM LSTM;
     
     // Modifiable parameters
-    Gain inputGain;
+    Gain inputGain, driveCompensationGain;
     juce::dsp::ProcessorChain<FilterBand, FilterBand, FilterBand, FilterBand, FilterBand> eq;
     Gain outputLevel;
     bool on;
