@@ -30,7 +30,7 @@ void RT_LSTM::load_json(const nlohmann::json& weights_json)
 
     std::vector<float> lstm_bias_ih = weights_json["/state_dict/rec.bias_ih_l0"_json_pointer];
     std::vector<float> lstm_bias_hh = weights_json["/state_dict/rec.bias_hh_l0"_json_pointer];
-    for (int i = 0; i < 80; ++i)
+    for (int i = 0; i < 128; ++i)
         lstm_bias_hh[i] += lstm_bias_ih[i];
     lstm.setBVals(lstm_bias_hh);
 
@@ -46,8 +46,29 @@ void RT_LSTM::reset()
     model.reset();
 }
 
-void RT_LSTM::process(const float* inData, float* outData, int numSamples)
+void RT_LSTM::process(const float* inData, float* outData, float driveParam, int numSamples)
 {
-    for (int i = 0; i < numSamples; ++i)
-        outData[i] = model.forward(inData + i) + inData[i];
+    // Check for parameter changes for smoothing calculations
+    if (driveParam != previousDrive) {
+        steppedValue = (driveParam - previousDrive) / numSamples;
+        changedValue = true;
+    } else {
+        changedValue = false;
+    }
+    
+    for (int i = 0; i < numSamples; ++i) {
+        inArray[0] = inData[i];
+        
+        // Perform ramped value calculations to smooth out sound
+        if (changedValue) {
+            inArray[1] = previousDrive + (i + 1) * steppedValue;
+        } else {
+            inArray[1] = driveParam;
+        }
+        
+        outData[i] = model.forward(inArray) + inData[i];
+    }
+    
+    previousDrive = driveParam;
+    
 }
