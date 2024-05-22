@@ -110,7 +110,13 @@ void PunkDistAudioProcessor::updateDrive()
 {
     auto IN = state.getRawParameterValue("DRIVE");
     driveValue = IN->load();
- }
+    
+    if (driveValue < 0.5f) {
+        compLevel = juce::jmap(driveValue, 0.f, 0.5f, 1.f, 1.5f);
+    } else {
+        compLevel = juce::jmap(driveValue, 0.5f, 1.f, 1.5f, 0.7f);
+    }
+}
 
 void PunkDistAudioProcessor::updateLevel()
 {
@@ -121,12 +127,12 @@ void PunkDistAudioProcessor::updateLevel()
 
 void PunkDistAudioProcessor::updateTone()
 {
-    auto TONE1 = state.getRawParameterValue("TONE1");
-    auto TONE2 = state.getRawParameterValue("TONE2");
-    float tone1freq = juce::jmap(TONE1->load(), 0.f, 10.f, 200.f, 2500.f);
-    float tone1gain = juce::jmap(TONE1->load(), 0.f, 10.f, 1.f, 2.5f);
-    float tone2dip = juce::Decibels::decibelsToGain(TONE2->load() * (-1.0f));
-    float tone2bump = juce::jmap(TONE2->load(), 0.f, 10.f, 1.f, 1.5f);
+    auto TONE1 = state.getRawParameterValue("TONE1")->load();
+    auto TONE2 = state.getRawParameterValue("TONE2")->load();
+    float tone1freq = juce::jmap(TONE1, 0.f, 10.f, 200.f, 2500.f);
+    float tone1gain = juce::jmap(TONE1, 0.f, 10.f, 1.f, 2.5f);
+    float tone2dip = juce::Decibels::decibelsToGain(TONE2 * (-2.0f));
+    float tone2bump = juce::jmap(TONE2, 0.f, 10.f, 1.f, 1.5f);
     
     float sampleRate = getSampleRate();
     *eq.get<1>().state = *juce::dsp::IIR::Coefficients<float>::makePeakFilter(sampleRate, tone1freq, 0.7071f, tone1gain);
@@ -217,6 +223,8 @@ void PunkDistAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juc
             else
                 LSTM2.process(buffer.getReadPointer(ch), buffer.getWritePointer(ch), driveValue, buffer.getNumSamples());
         }
+        
+        buffer.applyGain(compLevel);
         
         // Tone controls
         eq.process(juce::dsp::ProcessContextReplacing<float>(audioBlock));

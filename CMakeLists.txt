@@ -31,7 +31,7 @@ endif ()
 # By default we don't want Xcode schemes to be made for modules, etc
 set(CMAKE_XCODE_GENERATE_SCHEME OFF)
 
-# # #
+# # #
 
 # Change me!
 # This is the internal name of the project and the name of JUCE's shared code target
