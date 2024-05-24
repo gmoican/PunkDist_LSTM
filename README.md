@@ -6,6 +6,8 @@
 ## Introduction
 This is a simple vst3/au distortion plugin made with [JUCE](https://juce.com/) that I built to introduce myself in the JUCE framework. The goal was to replicate the behaviour of the [MiniDist by Markbass](https://www.markbass.it/product/mb-mini-dist/). The project was mostly used to further my understanding and knowledge of digital signal processing and digital audio effects.
 
+You can hear it in action [here](https://youtu.be/U6L5iTt00C0).
+
 ## Features
 - Drive gain: Uses inference to replicate the real pedal behaviour from a ML model.
 - Output Gain (from -30 up to 30 dB).

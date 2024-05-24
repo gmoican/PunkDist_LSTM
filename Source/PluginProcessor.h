@@ -69,7 +69,7 @@ private:
     RT_LSTM LSTM2;
     
     // Modifiable parameters
-    float driveValue = DEFAULT_DRIVE, compLevel = 1.f;
+    float driveValue = DEFAULT_DRIVE;
     juce::dsp::ProcessorChain<FilterBand, FilterBand, FilterBand, FilterBand> eq;
     Gain outputLevel;
     bool on;

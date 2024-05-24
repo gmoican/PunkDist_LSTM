@@ -110,12 +110,6 @@ void PunkDistAudioProcessor::updateDrive()
 {
     auto IN = state.getRawParameterValue("DRIVE");
     driveValue = IN->load();
-    
-    if (driveValue < 0.5f) {
-        compLevel = juce::jmap(driveValue, 0.f, 0.5f, 1.f, 1.5f);
-    } else {
-        compLevel = juce::jmap(driveValue, 0.5f, 1.f, 1.5f, 0.7f);
-    }
 }
 
 void PunkDistAudioProcessor::updateLevel()
@@ -223,9 +217,7 @@ void PunkDistAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juc
             else
                 LSTM2.process(buffer.getReadPointer(ch), buffer.getWritePointer(ch), driveValue, buffer.getNumSamples());
         }
-        
-        buffer.applyGain(compLevel);
-        
+                
         // Tone controls
         eq.process(juce::dsp::ProcessContextReplacing<float>(audioBlock));
         
